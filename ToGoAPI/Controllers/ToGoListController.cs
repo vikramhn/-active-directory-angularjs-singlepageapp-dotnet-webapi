@@ -15,21 +15,24 @@ namespace ToGoAPI.Controllers
     [Authorize]
     public class ToGoListController : ApiController
     {
-        private ToGoListServiceContext db = new ToGoListServiceContext();
 
+        static ConcurrentBag<ToGo> todoBag = new ConcurrentBag<ToGo>();
         // GET: api/ToGoList
         public IEnumerable<ToGo> Get()
         {
             string owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
-            IEnumerable<ToGo> currentUserToGos = db.ToGoes.Where(a => a.Owner == owner);
-            return currentUserToGos;
+            return from todo in todoBag
+                   where todo.Owner == owner
+                   select todo;
+            //   IEnumerable<ToGo> currentUserToGos = db.ToGoes.Where(a => a.Owner == owner);
+            //return currentUserToGos;
         }
 
         // GET: api/ToGoList/5
         public ToGo Get(int id)
         {
             string owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
-            ToGo toGo = db.ToGoes.First(a => a.Owner == owner && a.ID == id);
+            ToGo toGo = todoBag.First(a => a.Owner == owner && a.ID == id);
             return toGo;
         }
 
@@ -38,18 +41,22 @@ namespace ToGoAPI.Controllers
         {
             string owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
             ToGo.Owner = owner;
-            db.ToGoes.Add(ToGo);
-            db.SaveChanges();
+
+            {
+                todoBag.Add(ToGo);
+            }
+            //   db.ToGoes.Add(ToGo);
+            //  db.SaveChanges();
         }
 
         public void Put(ToGo ToGo)
         {
             string owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
-            ToGo xToGo = db.ToGoes.First(a => a.Owner == owner && a.ID == ToGo.ID);
+            ToGo xToGo = todoBag.First(a => a.Owner == owner && a.ID == ToGo.ID);
             if (ToGo != null)
             {
                 xToGo.Description = ToGo.Description;
-                db.SaveChanges();
+
             }
         }
 
@@ -57,11 +64,11 @@ namespace ToGoAPI.Controllers
         public void Delete(int id)
         {
             string owner = ClaimsPrincipal.Current.FindFirst(ClaimTypes.NameIdentifier).Value;
-            ToGo ToGo = db.ToGoes.First(a => a.Owner == owner && a.ID == id);
+            ToGo ToGo = todoBag.First(a => a.Owner == owner && a.ID == id);
             if (ToGo != null)
             {
-                db.ToGoes.Remove(ToGo);
-                db.SaveChanges();
+                //    todoBag.(ToGo);
+
             }
         }
     }
